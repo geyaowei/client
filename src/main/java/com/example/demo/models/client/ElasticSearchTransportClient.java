@@ -1,18 +1,28 @@
 package com.example.demo.models.client;
 
 import com.alibaba.fastjson.JSONObject;
+import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.rollover.RolloverRequest;
+import org.elasticsearch.action.admin.indices.rollover.RolloverResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.common.unit.ByteSizeUnit;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by hadoop on 2018/8/17.
@@ -67,6 +77,10 @@ public class ElasticSearchTransportClient {
         return this;
     }
 
+    /**
+     * 创建索引---方式1
+     * @throws java.io.IOException
+     */
     public void CreateIndexAndMapping() throws java.io.IOException{
         CreateIndexRequestBuilder cirb = client.admin().indices().prepareCreate(article);
         //CreateIndexRequest request = new CreateIndexRequest(article);
@@ -102,6 +116,93 @@ public class ElasticSearchTransportClient {
         CreateIndexResponse res=cirb.execute().actionGet();
         System.out.println("----------添加映射成功----------");
     }
+
+    /**
+     * 创建索引---方式2(可以设置setting,mapping,alias...)
+     * @throws java.io.IOException
+     */
+    public void CreateIndexAndMapping2() throws java.io.IOException{
+        CreateIndexRequest request = new CreateIndexRequest(article+"-test");
+        request.settings(Settings.builder().put("index.number_of_shards",3).put("index.number_of_replicas",2));
+        Map<String,Object> jsonMap = new HashMap<String,Object>();
+
+        //fields
+        Map<String,Object> name = new HashMap<String,Object>();
+        name.put("type","keyword");
+        Map<String,Object> age = new HashMap<String,Object>();
+        age.put("type","integer");
+        Map<String,Object> sex = new HashMap<String,Object>();
+        sex.put("type","keyword");
+
+        //属性
+        Map<String,Object> properties = new HashMap<String,Object>();
+        properties.put("name",name);
+        properties.put("age",age);
+        properties.put("sex",sex);
+
+        //type
+        Map<String,Object> doc = new HashMap<String,Object>();
+        doc.put("properties",properties);
+        jsonMap.put("doc",doc);
+        //index
+        request.mapping("doc",jsonMap);
+        CreateIndexResponse createIndexResponse = client.admin().indices().create(request).actionGet();
+        boolean acknowledged = createIndexResponse.isAcknowledged();
+        System.out.println("执行后的状态："+acknowledged);
+    }
+
+    /**
+     * 创建索引---方式3(可以设置setting,mapping,alias...)
+     * @throws java.io.IOException
+     */
+    public void CreateIndexAndMapping3() throws java.io.IOException{
+        CreateIndexRequest request = new CreateIndexRequest(article+"-test2");
+        request.settings(Settings.builder().put("index.number_of_shards",3).put("index.number_of_replicas",2));
+        XContentBuilder builder = XContentFactory.jsonBuilder();
+        builder.startObject();
+        //type
+        builder.startObject("doc");
+        //属性
+        builder.startObject("properties");
+        //fields
+        builder.startObject("name");
+        builder.field("type","keyword");
+        builder.endObject();
+        builder.startObject("age");
+        builder.field("type","integer");
+        builder.endObject();
+        builder.startObject("sex");
+        builder.field("type","keyword");
+        builder.endObject();
+
+        builder.endObject();
+        builder.endObject();
+        builder.endObject();
+
+        request.mapping("doc",builder);
+        request.alias(new Alias("alias"));
+        CreateIndexResponse createIndexResponse = client.admin().indices().create(request).actionGet();
+        boolean acknowledged = createIndexResponse.isAcknowledged();
+        System.out.println("执行后的状态："+acknowledged);
+    }
+
+    /**
+     *
+     * @throws java.io.IOException
+     */
+    public void CreateRolloverIndexAndMapping() throws java.io.IOException{
+        RolloverRequest request = new RolloverRequest("alias", "index-2");
+        request.addMaxIndexAgeCondition(new TimeValue(7, TimeUnit.MINUTES));
+        request.addMaxIndexDocsCondition(1000);
+        request.addMaxIndexSizeCondition(new ByteSizeValue(50, ByteSizeUnit.MB));
+        request.dryRun(true);
+        //暂不支持6.2.4及以下版本
+        //request.getCreateIndexRequest().settings(Settings.builder().put("index.number_of_shards",3).put("index.number_of_replicas",2));
+        //request.getCreateIndexRequest().mapping("type", "field", "type=keyword");
+        //request.getCreateIndexRequest().alias(new Alias("another_alias"));
+        //RolloverResponse rolloverResponse = client.indices().rollover(request);
+    }
+
 
 
 

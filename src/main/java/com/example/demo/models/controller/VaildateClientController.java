@@ -28,7 +28,9 @@ public class VaildateClientController {
     public String getClient(){
         try{
             ElasticSearchTransportClient client = new ElasticSearchTransportClient.Builder().clusterName(clusterName).hostName(hostName).client().build();
-            client.CreateIndexAndMapping();
+            //client.CreateIndexAndMapping()
+            //client.CreateIndexAndMapping2();
+            client.CreateIndexAndMapping3();
         }catch(UnknownHostException e){
             System.out.println(e);
         }catch(IOException e){
