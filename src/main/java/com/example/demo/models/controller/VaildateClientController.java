@@ -1,6 +1,7 @@
 package com.example.demo.models.controller;
 
 import com.example.demo.models.client.ElasticSearchTransportClient;
+import com.example.demo.models.highlevelclient.HighLevelClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,9 +29,12 @@ public class VaildateClientController {
     public String getClient(){
         try{
             ElasticSearchTransportClient client = new ElasticSearchTransportClient.Builder().clusterName(clusterName).hostName(hostName).client().build();
+            HighLevelClient highLevelClient = new HighLevelClient.Builder().hostName(hostName).client().build();
+            highLevelClient.CreateRolloverIndexAndMapping();
             //client.CreateIndexAndMapping()
             //client.CreateIndexAndMapping2();
-            client.CreateIndexAndMapping3();
+            //client.CreateIndexAndMapping3();
+            //client.CreateRolloverIndexAndMapping();
         }catch(UnknownHostException e){
             System.out.println(e);
         }catch(IOException e){
