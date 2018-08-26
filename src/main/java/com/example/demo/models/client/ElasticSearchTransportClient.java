@@ -1,6 +1,5 @@
 package com.example.demo.models.client;
 
-import com.alibaba.fastjson.JSONObject;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -15,7 +14,6 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
@@ -197,10 +195,18 @@ public class ElasticSearchTransportClient {
         request.addMaxIndexSizeCondition(new ByteSizeValue(50, ByteSizeUnit.MB));
         request.dryRun(true);
         //暂不支持6.2.4及以下版本
-        //request.getCreateIndexRequest().settings(Settings.builder().put("index.number_of_shards",3).put("index.number_of_replicas",2));
-        //request.getCreateIndexRequest().mapping("type", "field", "type=keyword");
-        //request.getCreateIndexRequest().alias(new Alias("another_alias"));
-        //RolloverResponse rolloverResponse = client.indices().rollover(request);
+        request.getCreateIndexRequest().settings(Settings.builder().put("index.number_of_shards",3).put("index.number_of_replicas",2));
+        request.getCreateIndexRequest().mapping("type", "field", "type=keyword");
+        request.getCreateIndexRequest().alias(new Alias("another_alias"));
+        RolloverResponse rolloverResponse = client.admin().indices().rolloversIndex(request).actionGet();
+        boolean acknowledged = rolloverResponse.isAcknowledged();
+        boolean shardsAcked = rolloverResponse.isShardsAcknowledged();
+        String oldIndex = rolloverResponse.getOldIndex();
+        String newIndex = rolloverResponse.getNewIndex();
+        boolean isRolledOver = rolloverResponse.isRolledOver();
+        boolean isDryRun = rolloverResponse.isDryRun();
+        Map<String, Boolean> conditionStatus = rolloverResponse.getConditionStatus();
+        System.out.println("执行后的状态："+acknowledged);
     }
 
 

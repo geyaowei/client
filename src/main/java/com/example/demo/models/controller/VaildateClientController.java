@@ -31,6 +31,7 @@ public class VaildateClientController {
             //client.CreateIndexAndMapping()
             //client.CreateIndexAndMapping2();
             client.CreateIndexAndMapping3();
+            //client.CreateRolloverIndexAndMapping();
         }catch(UnknownHostException e){
             System.out.println(e);
         }catch(IOException e){
