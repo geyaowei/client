@@ -1,11 +1,17 @@
 package com.example.demo.models.client;
 
+import com.alibaba.fastjson.JSONObject;
+import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.rollover.RolloverRequest;
 import org.elasticsearch.action.admin.indices.rollover.RolloverResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
@@ -14,6 +20,11 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
@@ -183,31 +194,45 @@ public class ElasticSearchTransportClient {
         boolean acknowledged = createIndexResponse.isAcknowledged();
         System.out.println("执行后的状态："+acknowledged);
     }
+    //进行match查询
+    public void getBoolQuery(){
+        BoolQueryBuilder mustQuery = QueryBuilders.boolQuery();
+        mustQuery.must(QueryBuilders.matchAllQuery());
+        //mustQuery.must(QueryBuilders.matchQuery("name", "applog"));
+        SearchResponse response = client.prepareSearch("article-test").setTypes("doc")
+                         .setQuery(mustQuery)
+                            .execute().actionGet();
+        SearchHits hits = response.getHits();
+        System.out.println(response.getHits().getHits().toString());
+        for(SearchHit hit : hits){
+           System.out.println(hit.docId());
+        }
+    }
 
     /**
-     *
-     * @throws java.io.IOException
+     * 多字段查询
      */
-    public void CreateRolloverIndexAndMapping() throws java.io.IOException{
-        RolloverRequest request = new RolloverRequest("alias", "index-2");
-        request.addMaxIndexAgeCondition(new TimeValue(7, TimeUnit.MINUTES));
-        request.addMaxIndexDocsCondition(1000);
-        request.addMaxIndexSizeCondition(new ByteSizeValue(50, ByteSizeUnit.MB));
-        request.dryRun(true);
-        //暂不支持6.2.4及以下版本
-        request.getCreateIndexRequest().settings(Settings.builder().put("index.number_of_shards",3).put("index.number_of_replicas",2));
-        request.getCreateIndexRequest().mapping("type", "field", "type=keyword");
-        request.getCreateIndexRequest().alias(new Alias("another_alias"));
-        RolloverResponse rolloverResponse = client.admin().indices().rolloversIndex(request).actionGet();
-        boolean acknowledged = rolloverResponse.isAcknowledged();
-        boolean shardsAcked = rolloverResponse.isShardsAcknowledged();
-        String oldIndex = rolloverResponse.getOldIndex();
-        String newIndex = rolloverResponse.getNewIndex();
-        boolean isRolledOver = rolloverResponse.isRolledOver();
-        boolean isDryRun = rolloverResponse.isDryRun();
-        Map<String, Boolean> conditionStatus = rolloverResponse.getConditionStatus();
-        System.out.println("执行后的状态："+acknowledged);
+    public  void multisearch() {
+        try {
+            SearchRequestBuilder searchRequestBuilder = client.prepareSearch("test").setTypes("doc");
+            SearchResponse searchResponse = searchRequestBuilder.
+                    setQuery(QueryBuilders.boolQuery()
+                            //.must(QueryBuilders.fuzzyQuery("tag","example"))
+                            //.must(QueryBuilders.matchQuery("tag","example"))
+                            .must(QueryBuilders.matchPhraseQuery("tag","example"))
+                            .must(QueryBuilders.termQuery("age",18)))
+                    .setFrom(0).setSize(100).execute().actionGet();
+            SearchHit[] results = searchResponse.getHits().getHits();
+            for(SearchHit hit : results){
+                String sourceAsString = hit.getSourceAsString();
+                JSONObject json = JSONObject.parseObject(sourceAsString);
+                System.out.println(json.toJSONString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 
 
 
