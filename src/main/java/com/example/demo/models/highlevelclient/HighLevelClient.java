@@ -56,15 +56,15 @@ public class HighLevelClient {
      * @throws java.io.IOException
      */
     public void CreateRolloverIndexAndMapping() throws java.io.IOException{
-        RolloverRequest request = new RolloverRequest("alias", "index-2");
-        request.addMaxIndexAgeCondition(new TimeValue(7, TimeUnit.MINUTES));
+        RolloverRequest request = new RolloverRequest("logs_write", "logs-000004");
+        request.addMaxIndexAgeCondition(new TimeValue(10, TimeUnit.MINUTES));
         request.addMaxIndexDocsCondition(1000);
         request.addMaxIndexSizeCondition(new ByteSizeValue(50, ByteSizeUnit.MB));
-        request.dryRun(true);
+        request.dryRun(false);
         //暂不支持6.2.4及以下版本
         request.getCreateIndexRequest().settings(Settings.builder().put("index.number_of_shards",3).put("index.number_of_replicas",2));
         request.getCreateIndexRequest().mapping("type", "field", "type=keyword");
-        request.getCreateIndexRequest().alias(new Alias("another_alias"));
+        //request.getCreateIndexRequest().alias(new Alias("another_alias"));
         RolloverResponse rolloverResponse = client.indices().rollover(request);
         boolean acknowledged = rolloverResponse.isAcknowledged();
         boolean shardsAcked = rolloverResponse.isShardsAcknowledged();
