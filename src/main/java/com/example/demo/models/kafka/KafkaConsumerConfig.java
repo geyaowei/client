@@ -18,8 +18,8 @@ import java.util.Map;
 /**
  * Created by geyaowei on 2018/11/7.
  */
-@Configuration
-@EnableKafka
+//@Configuration
+//@EnableKafka
 public class KafkaConsumerConfig {
 
     @Value("${kafka.consumer.servers}")

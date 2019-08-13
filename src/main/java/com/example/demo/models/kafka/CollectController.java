@@ -11,8 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Created by geyaowei on 2018/11/7.
  */
-@RestController
-@RequestMapping("/kafka")
+//@RestController
+//@RequestMapping("/kafka")
 public class CollectController {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired

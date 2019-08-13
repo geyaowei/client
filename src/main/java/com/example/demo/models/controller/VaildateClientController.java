@@ -28,17 +28,21 @@ public class VaildateClientController {
     @RequestMapping(value="/client",method= RequestMethod.GET)
     public String getClient(){
         try{
-            ElasticSearchTransportClient client = new ElasticSearchTransportClient.Builder().clusterName(clusterName).hostName(hostName).client().build();
-            client.multisearch();
-            //HighLevelClient highLevelClient = new HighLevelClient.Builder().hostName(hostName).client().build();
+            //ElasticSearchTransportClient client = new ElasticSearchTransportClient.Builder().clusterName(clusterName).hostName(hostName).client().build();
+            //client.multisearch();
+            HighLevelClient highLevelClient = new HighLevelClient.Builder().hostName(hostName).client().build();
             //highLevelClient.CreateRolloverIndexAndMapping();
             //client.CreateIndexAndMapping()
             //client.CreateIndexAndMapping2();
             //client.CreateIndexAndMapping3();
             //client.CreateRolloverIndexAndMapping();
+            //highLevelClient.createLogDetailIndex();
+            highLevelClient.bulkInsertDocument();
         }catch(UnknownHostException e){
             System.out.println(e);
         }catch(IOException e){
+            System.out.println(e);
+        }catch (Exception e){
             System.out.println(e);
         }
 

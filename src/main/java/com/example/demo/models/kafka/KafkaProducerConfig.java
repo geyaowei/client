@@ -15,8 +15,8 @@ import org.springframework.kafka.core.ProducerFactory;
 /**
  * Created by geyaowei on 2018/11/7.
  */
-@Configuration
-@EnableKafka
+//@Configuration
+//@EnableKafka
 public class KafkaProducerConfig {
 
     @Value("${kafka.producer.servers}")
