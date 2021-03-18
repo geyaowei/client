@@ -101,7 +101,7 @@
 		<!--<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
-			<version>6.3.2</version>
+			<version>6.8.13</version>
 		</dependency>-->
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
@@ -122,7 +122,7 @@
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
-			<version>6.3.2</version>
+			<version>6.8.13</version>
 		</dependency>
 
 		<dependency>
